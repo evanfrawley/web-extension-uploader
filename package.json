@@ -1,0 +1,12 @@
+{
+  "name": "uploader",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.524.0",
+    "form-data": "^2.5.1",
+    "node-fetch": "^2.6.0",
+    "puppeteer": "^1.19.0"
+  }
+}

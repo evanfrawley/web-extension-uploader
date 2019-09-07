@@ -1,0 +1,25 @@
+name: "web-extension-uploader"
+author: "evanfrawley <evanfrawley@gmail.com>"
+description: "Upload web extensions to the Chrome Web Store and Addons.mozilla.org (AMO)"
+inputs:
+  chrome_store_id:
+    description: "the ID of your extension in the Chrome Web Store"
+    required: false
+    default: ""
+  mozilla_addon_id:
+    descriptions: "the id of your addon in AMO"
+    required: false
+    default: ""
+  src_dir:
+    descriptions: "the directory to find the extension zip files"
+    required: true
+  zip_name:
+    descriptions: "the filename of your packaged extension"
+    required: true
+  zip_src_name:
+    descriptions: "the filename extension's packaged source code"
+    required: false
+    default: ""
+runs:
+  using: "docker"
+  image: "docker://evanfrawley/uploader:latest"
