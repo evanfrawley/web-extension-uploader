@@ -87,58 +87,58 @@ async function uploadFirefox() {
     await timeout(15000);
     await screenshot(page);
 
-    // Upload the source
-    const queriesToAttempt = ["#id_has_source", "label[for='id_has_source_0']", "#id_has_source_0"];
-    let clicked = false;
-    await Promise.all(queriesToAttempt.map(async (query) => {
-        if (!clicked) {
-            let sourceButtonConfirm = await page.$(query);
-            if (sourceButtonConfirm && sourceButtonConfirm.children && sourceButtonConfirm.children.length > 0) {
-                sourceButtonConfirm.children[0].click();
-                clicked = true;
-            }
-        }
-        return Promise.resolve();
-    }))
-    .catch(() => {
-        return screenshot(page)
-            .then(() => {
-                process.exit(1);
-            });
-    });
-
-    await screenshot(page);
-    await timeout(1000);
-    await screenshot(page);
-
-    const [sourceFileChooser] = await Promise.all([
-      page.waitForFileChooser(),
-      page.click('#id_source'),
-    ]);
-    await sourceFileChooser.accept([zipSourcePath]);
-
-    await screenshot(page);
-    await timeout(15000);
-    await screenshot(page);
-
-    await page.evaluate(() => {
-      document.querySelector("button[type='submit']").click();
-    });
-
-    await screenshot(page);
-    await timeout(15000);
-    await screenshot(page);
-
-    // Patch notes
-    await page.focus("#id_release_notes_0");
-    await page.keyboard.type('- Bug fixes and improvements', {delay: 100});
-    await page.evaluate(() => {
-      document.querySelector("button[type='submit']").click();
-    });
-
-    await screenshot(page);
-    await timeout(15000);
-    await screenshot(page);
+    // // Upload the source
+    // const queriesToAttempt = ["#id_has_source", "label[for='id_has_source_0']", "#id_has_source_0"];
+    // let clicked = false;
+    // await Promise.all(queriesToAttempt.map(async (query) => {
+    //     if (!clicked) {
+    //         let sourceButtonConfirm = await page.$(query);
+    //         if (sourceButtonConfirm && sourceButtonConfirm.children && sourceButtonConfirm.children.length > 0) {
+    //             sourceButtonConfirm.children[0].click();
+    //             clicked = true;
+    //         }
+    //     }
+    //     return Promise.resolve();
+    // }))
+    // .catch(() => {
+    //     return screenshot(page)
+    //         .then(() => {
+    //             process.exit(1);
+    //         });
+    // });
+    //
+    // await screenshot(page);
+    // await timeout(1000);
+    // await screenshot(page);
+    //
+    // const [sourceFileChooser] = await Promise.all([
+    //   page.waitForFileChooser(),
+    //   page.click('#id_source'),
+    // ]);
+    // await sourceFileChooser.accept([zipSourcePath]);
+    //
+    // await screenshot(page);
+    // await timeout(15000);
+    // await screenshot(page);
+    //
+    // await page.evaluate(() => {
+    //   document.querySelector("button[type='submit']").click();
+    // });
+    //
+    // await screenshot(page);
+    // await timeout(15000);
+    // await screenshot(page);
+    //
+    // // Patch notes
+    // await page.focus("#id_release_notes_0");
+    // await page.keyboard.type('- Bug fixes and improvements', {delay: 100});
+    // await page.evaluate(() => {
+    //   document.querySelector("button[type='submit']").click();
+    // });
+    //
+    // await screenshot(page);
+    // await timeout(15000);
+    // await screenshot(page);
 
     await browser.close();
     msg("🎉 Upload to Firefox completed 🎉");
