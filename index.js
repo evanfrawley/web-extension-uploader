@@ -1,9 +1,7 @@
 const puppeteer = require('puppeteer');
 const fetch = require('node-fetch');
 const { URLSearchParams } = require('url');
-const { readFileSync, createReadStream, statSync } = require('fs');
-const AWS = require('aws-sdk');
-const S3 = require('aws-sdk/clients/s3');
+const { createReadStream, statSync } = require('fs');
 
 const {
     CHROME_CLIENT_ID,
@@ -11,19 +9,12 @@ const {
     CHROME_REFRESH_TOKEN,
     MOZILLA_USERNAME,
     MOZILLA_PASSWORD,
-    AWS_ACCESS_ID,
-    AWS_ACCESS_SECRET,
     INPUT_CHROME_STORE_ID,
     INPUT_MOZILLA_ADDON_ID,
     INPUT_SRC_DIR,
     INPUT_ZIP_NAME,
     INPUT_ZIP_SRC_NAME,
 } = process.env;
-
-AWS.config.update({
-    accessKeyId: AWS_ACCESS_ID,
-    secretAccessKey: AWS_ACCESS_SECRET
-});
 
 const zipPath = `${INPUT_SRC_DIR}${INPUT_ZIP_NAME}`;
 const zipSourcePath = `${INPUT_SRC_DIR}${INPUT_ZIP_SRC_NAME}`;
@@ -44,26 +35,15 @@ function msg(phrase) {
     console.log();
 }
 
-async function uploadToS3(imgPath) {
-    const img = await readFileSync(imgPath);
-
-    const base64data = new Buffer(img, 'binary');
-    const s3 = new S3();
-
-    const now = new Date();
-
-    const timestampedFilename = `${now.getFullYear()}_${now.getMonth()}_${now.getDay()}_${now.getHours()}_${now.getMinutes()}_${now.getSeconds()}_${imgPath}`;
-
-    s3.putObject({
-        Bucket: 'kanga-debug',
-        Key: timestampedFilename,
-        Body: base64data,
-        ACL: 'public-read'
-    },function (resp) {
-        console.log(arguments);
-        console.log('Successfully uploaded package.');
-    });
-    return timeout(1000);
+async function screenshot(page) {
+    const date = new Date();
+    const year = date.getFullYear();
+    let month = (1 + date.getMonth()).toString();
+    month = month.length > 1 ? month : "0" + month;
+    let day = date.getDate().toString();
+    day = day.length > 1 ? day : "0" + day;
+    const timestampedFilename = `screenshots/${year}_${month}_${day}_${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}_screenshot.png`;
+    return page.screenshot({path: timestampedFilename});
 }
 
 async function uploadFirefox() {
@@ -76,7 +56,9 @@ async function uploadFirefox() {
     console.log(`https://addons.mozilla.org/en-US/developers/addon/${INPUT_MOZILLA_ADDON_ID}/versions/submit/`);
     await page.goto(`https://addons.mozilla.org/en-US/developers/addon/${INPUT_MOZILLA_ADDON_ID}/versions/submit/`);
     
+    await screenshot(page);
     await timeout(10000);
+    await screenshot(page);
 
     // Logging in
     await page.focus("input[name='email']");
@@ -90,6 +72,7 @@ async function uploadFirefox() {
 
     await timeout(15000);
     msg("Logged in");
+    await screenshot(page);
 
     // Uploading built version
     const [builtFileChooser] = await Promise.all([
@@ -99,14 +82,10 @@ async function uploadFirefox() {
     await builtFileChooser.accept([zipPath]);
     await timeout(15000);
     await page.click("#submit-upload-file-finish");
+    await screenshot(page);
     msg("Clicked submit");
     await timeout(15000);
-
-    console.log("could not find out what to click next!!1");
-    await page.screenshot({path: "error.png"})
-        .then(() => {
-            return uploadToS3("error.png")
-        });
+    await screenshot(page);
 
     // Upload the source
     const queriesToAttempt = ["#id_has_source", "label[for='id_has_source_0']", "#id_has_source_0"];
@@ -122,40 +101,46 @@ async function uploadFirefox() {
         return Promise.resolve();
     }))
     .catch(() => {
-        console.log("could not find out what to click next");
-        return page.screenshot({path: "error.png"})
+        return screenshot(page)
             .then(() => {
-                return uploadToS3("error.png")
-            })
-            .then((res) => {
-                console.log(res);
                 process.exit(1);
             });
     });
 
+    await screenshot(page);
     await timeout(1000);
+    await screenshot(page);
 
     const [sourceFileChooser] = await Promise.all([
       page.waitForFileChooser(),
       page.click('#id_source'),
     ]);
     await sourceFileChooser.accept([zipSourcePath]);
+
+    await screenshot(page);
     await timeout(15000);
+    await screenshot(page);
+
     await page.evaluate(() => {
       document.querySelector("button[type='submit']").click();
     });
+
+    await screenshot(page);
     await timeout(15000);
-  
+    await screenshot(page);
+
     // Patch notes
     await page.focus("#id_release_notes_0");
     await page.keyboard.type('- Bug fixes and improvements', {delay: 100});
     await page.evaluate(() => {
       document.querySelector("button[type='submit']").click();
     });
+
+    await screenshot(page);
     await timeout(15000);
+    await screenshot(page);
 
-    await browser.close();  
-
+    await browser.close();
     msg("🎉 Upload to Firefox completed 🎉");
 }
 
