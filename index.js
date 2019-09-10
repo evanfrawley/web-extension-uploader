@@ -240,7 +240,7 @@ async function uploadChrome() {
 
     try {
         if (INPUT_CHROME_STORE_ID && CHROME_CLIENT_ID && CHROME_CLIENT_SECRET && CHROME_REFRESH_TOKEN) {
-            // await uploadChrome();
+            await uploadChrome();
         }
         if (INPUT_MOZILLA_ADDON_ID && MOZILLA_USERNAME && MOZILLA_PASSWORD) {
             await uploadFirefox();
